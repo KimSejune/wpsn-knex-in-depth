@@ -23,7 +23,7 @@ app.set('trust proxy')
 app.use(express.static(path.join(__dirname, '..', 'public')))
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(cookieSession({
-  name: 'oasess',
+  name: 'knexjoinsession',
   keys: [
     process.env.SECRET
   ]
@@ -56,10 +56,12 @@ passport.use(new GitHubStrategy({
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
   callbackURL: process.env.GITHUB_CALLBACK_URL
 }, (accessToken, refreshToken, profile, done) => {
+  const avatar_url = profile.photos[0] ? profile.photos[0].value : null
   query.firstOrCreateUserByProvider(
     'github',
     profile.id,
-    accessToken
+    accessToken,
+    avatar_url
   ).then(user => {
     done(null, user)
   }).catch(err => {

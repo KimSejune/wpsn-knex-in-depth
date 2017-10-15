@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const validator = require('validator')
 
 module.exports = {
-  firstOrCreateUserByProvider(provider, provider_user_id, access_token=null) {
+  firstOrCreateUserByProvider(provider, provider_user_id, access_token=null, avatar_url=null) {
     return knex('user')
       .where({
         provider,
@@ -18,7 +18,8 @@ module.exports = {
             .insert({
               provider,
               provider_user_id,
-              access_token
+              access_token,
+              avatar_url
             })
             .then(([id]) => {
               return knex('user')
