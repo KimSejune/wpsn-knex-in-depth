@@ -5,7 +5,7 @@ const router = express.Router()
 
 // 게시글 목록
 router.get('/', (req, res) => {
-  query.getArticles()
+  query.getArticlesWithCommentCount()
     .select('article.id', 'article.title', 'article.content', 'article.created_at', 'user.username')
     .then(articles => {
       res.render('article/list.pug', {

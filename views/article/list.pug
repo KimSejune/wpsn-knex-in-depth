@@ -10,6 +10,7 @@ block body
         td 아이디
         td 제목
         td 작성자
+        td 댓글 수
     tbody
       each article in articles
         tr
@@ -17,3 +18,4 @@ block body
           td
             a(href=`/bbs/${article.id}`)= article.title
           td= article.username
+          td= article.comment_count

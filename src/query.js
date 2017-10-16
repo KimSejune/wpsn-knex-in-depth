@@ -40,6 +40,12 @@ module.exports = {
       .join('user', 'user.id', 'article.user_id')
       .orderBy('article.id', 'desc')
   },
+  getArticlesWithCommentCount() {
+    return this.getArticles()
+      .select(knex.raw('COUNT(*) as comment_count'))
+      .join('comment', 'comment.article_id', 'article.id')
+      .groupBy('comment.article_id')
+  },
   createArticle({user_id, title, content}) {
     return knex('article')
       .insert({
