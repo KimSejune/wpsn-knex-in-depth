@@ -3,6 +3,24 @@ extends ../layout/main.pug
 block body
   div.clearfix
     h1.float-left= title
-    a.button.float-right 목록으로
-  ins #{username}에 의해 #{created_at.toISOString()}에 작성됨
-  p= content
+    a.button.float-right(href='/bbs') 목록으로
+  ins #{article.username}에 의해 #{article.created_at.toISOString()}에 작성됨
+  p= article.content
+  form(method='POST', action=`/bbs/${article.id}/comment`)
+    input(type='hidden', name='_csrf', value=csrfToken)
+    .input-group
+      input(type='text', name='content', autofocus)
+      button(type='submit') 전송
+  if comments.length > 0
+    table
+      thead
+        tr
+          td 작성자
+          td 댓글
+      tbody
+        each comment in comments
+          tr
+            td= comment.username
+            td= comment.content
+  else
+    p.alert.alert-info 댓글이 없습니다.

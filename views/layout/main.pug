@@ -14,4 +14,4 @@ html(lang="en")
       .errors
         - var errors = req.flash('error')
         each error in errors
-          p= error
+          p.alert.alert-danger= error

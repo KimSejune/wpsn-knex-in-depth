@@ -53,5 +53,15 @@ module.exports = {
       .join('user', 'user.id', 'article.user_id')
       .where('article.id', id)
       .first()
+  },
+  getCommentsByArticleId(article_id) {
+    return knex('comment')
+      .where({article_id})
+      .join('user', 'user.id', 'comment.user_id')
+      .orderBy('comment.id', 'desc')
+  },
+  createComment({user_id, article_id, content}) {
+    return knex('comment')
+      .insert({user_id, article_id, content})
   }
 }

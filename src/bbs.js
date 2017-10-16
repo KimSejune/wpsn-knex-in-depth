@@ -14,10 +14,12 @@ router.get('/', (req, res) => {
     })
 })
 
+// 게시글 폼
 router.get('/new', (req, res) => {
   res.render('article/new.pug')
 })
 
+// 게시글 생성
 router.post('/new', (req, res) => {
   const article = {
     user_id: req.user.id,
@@ -30,12 +32,29 @@ router.post('/new', (req, res) => {
     })
 })
 
-// 게시글
+// 게시글 + 댓글 폼
 router.get('/:id', (req, res) => {
-  query.getArticleById(req.params.id)
+  const id = req.params.id
+  const articlePromise = query.getArticleById(id)
     .select('article.id', 'article.title', 'article.content', 'article.created_at', 'user.username')
-    .then(data => {
-      res.render('article/show.pug', data)
+  const commentPromise = query.getCommentsByArticleId(id)
+    .select('user.username', 'comment.content')
+  Promise.all([articlePromise, commentPromise])
+    .then(([article, comments]) => {
+      res.render('article/show.pug', {article, comments})
+    })
+})
+
+// 댓글 생성
+router.post('/:id/comment', (req, res) => {
+  const comment = {
+    user_id: req.user.id,
+    article_id: req.params.id,
+    content: req.body.content
+  }
+  query.createComment(comment)
+    .then(() => {
+      res.redirect(`/bbs/${req.params.id}`)
     })
 })
 
