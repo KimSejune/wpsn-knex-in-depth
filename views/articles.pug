@@ -1,0 +1,19 @@
+extends layout/main.pug
+
+block body
+  div.clearfix
+    h1.float-left 게시글 목록
+    a.button.float-right 새 글
+  table
+    thead
+      tr
+        td 아이디
+        td 제목
+        td 작성자
+    tbody
+      each article in articles
+        tr
+          td= article.id
+          td
+            a(href=`/bbs/${article.id}`)= article.title
+          td= article.author

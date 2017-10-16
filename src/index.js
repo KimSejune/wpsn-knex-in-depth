@@ -12,6 +12,7 @@ const GitHubStrategy = require('passport-github').Strategy
 const util = require('./util')
 const query = require('./query')
 const mw = require('./middleware')
+const bbsRouter = require('./bbs')
 
 const PORT = process.env.PORT || 3000
 
@@ -90,6 +91,7 @@ app.get('/auth/github/callback', passport.authenticate('github', {
   failureFlash: true
 }))
 
+app.use('/bbs', bbsRouter)
 
 app.listen(PORT, () => {
   console.log(`listening ${PORT}...`)

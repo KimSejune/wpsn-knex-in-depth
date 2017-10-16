@@ -1,3 +1,15 @@
+body {
+  background-color: #001f3f;
+}
+
 .errors {
   color: #FF0000;
+}
+
+.wrap {
+  min-height: 100vh;
+  background-color: white;
+  width: 800px;
+  padding: 30px;
+  margin: 0 auto;
 }

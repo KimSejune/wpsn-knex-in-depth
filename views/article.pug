@@ -1,0 +1,8 @@
+extends layout/main.pug
+
+block body
+  div.clearfix
+    h1.float-left= title
+    a.button.float-right 목록으로
+  ins #{author}에 의해 #{created_at.toISOString()}에 작성됨
+  p= content
