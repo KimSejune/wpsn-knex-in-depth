@@ -1,10 +1,11 @@
 extends layout/main.pug
 
 block body
-  h1 index
+  h1 현재 로그인 된 사용자
 
-  p 현재 로그인 된 사용자의 인증 제공자: #{req.user.provider}
-  p 현재 로그인 된 사용자의 식별자: #{req.user.provider_user_id}
+  p 인증 제공자: #{req.user.provider}
+  p 식별자: #{req.user.provider_user_id}
+  p 이름: #{req.user.username}
   p
     img(src=req.user.avatar_url)
 

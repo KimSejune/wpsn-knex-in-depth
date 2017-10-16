@@ -59,11 +59,13 @@ passport.use(new GitHubStrategy({
   callbackURL: process.env.GITHUB_CALLBACK_URL
 }, (accessToken, refreshToken, profile, done) => {
   const avatar_url = profile.photos[0] ? profile.photos[0].value : null
+  const username = profile.username
   query.firstOrCreateUserByProvider(
     'github',
     profile.id,
     accessToken,
-    avatar_url
+    avatar_url,
+    username
   ).then(user => {
     done(null, user)
   }).catch(err => {

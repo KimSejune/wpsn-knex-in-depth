@@ -1,9 +1,9 @@
-extends layout/main.pug
+extends ../layout/main.pug
 
 block body
   div.clearfix
     h1.float-left 게시글 목록
-    a.button.float-right 새 글
+    a.button.float-right(href='/bbs/new') 새 글
   table
     thead
       tr
@@ -16,4 +16,4 @@ block body
           td= article.id
           td
             a(href=`/bbs/${article.id}`)= article.title
-          td= article.author
+          td= article.username
