@@ -87,12 +87,19 @@ app.post('/logout', (req, res) => {
 app.get('/auth/github', passport.authenticate('github'))
 
 app.get('/auth/github/callback', passport.authenticate('github', {
-  successRedirect: '/',
+  successRedirect: '/bbs',
   failureRedirect: '/login',
   failureFlash: true
 }))
 
-app.use('/bbs', bbsRouter)
+app.use('/bbs', (req, res, next) => {
+  if (!req.user) {
+    req.flash('error', '로그인이 필요합니다.')
+    res.redirect('/login')
+  } else {
+    next()
+  }
+}, bbsRouter)
 
 app.listen(PORT, () => {
   console.log(`listening ${PORT}...`)
