@@ -8,7 +8,7 @@ const csurf = require('csurf')
 const flash = require('connect-flash')
 const passport = require('passport')
 const GitHubStrategy = require('passport-github').Strategy
-
+const morgan = require('morgan')
 const util = require('./util')
 const query = require('./query')
 const mw = require('./middleware')
@@ -21,6 +21,7 @@ const app = express()
 app.set('view engine', 'pug')
 app.set('trust proxy')
 
+app.use(morgan('tiny'))
 app.use(express.static(path.join(__dirname, '..', 'public')))
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(cookieSession({
