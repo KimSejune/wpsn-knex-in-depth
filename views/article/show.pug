@@ -6,10 +6,10 @@ block body
     a.button.float-right(href='/bbs') 목록으로
   ins #{article.username}에 의해 #{article.created_at.toISOString()}에 작성됨
   p= article.content
-  form(method='POST', action=`/bbs/${article.id}/comment`)
+  form(method='POST', action=`/bbs/${article.id}/comment`, autocomplete='off')
     input(type='hidden', name='_csrf', value=csrfToken)
     .input-group
-      input(type='text', name='content', autofocus)
+      input(type='text', name='content', autofocus, required)
       button(type='submit') 전송
   if comments.length > 0
     table

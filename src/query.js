@@ -62,8 +62,9 @@ module.exports = {
   },
   getCommentsByArticleId(article_id) {
     return knex('comment')
-      .where({article_id})
       .join('user', 'user.id', 'comment.user_id')
+      .select('user.username', 'comment.content')
+      .where({article_id})
       .orderBy('comment.id', 'desc')
   },
   createComment({user_id, article_id, content}) {
