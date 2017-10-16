@@ -41,10 +41,13 @@ module.exports = {
       .orderBy('article.id', 'desc')
   },
   getArticlesWithCommentCount() {
+    const subquery = knex('comment')
+      .select('article_id', knex.raw('count(*) as comment_count'))
+      .groupBy('article_id')
+      .as('comment_count_table')
     return this.getArticles()
-      .select(knex.raw('COUNT(*) as comment_count'))
-      .join('comment', 'comment.article_id', 'article.id')
-      .groupBy('comment.article_id')
+      .leftOuterJoin(subquery, 'comment_count_table.article_id', 'article.id')
+      .select(knex.raw('coalesce(comment_count_table.comment_count, 0) as comment_count'))
   },
   createArticle({user_id, title, content}) {
     return knex('article')

@@ -1,10 +1,12 @@
 # WPSN Knex In Depth
 
-이 프로젝트는 WPSN OAuth 프로젝트에서 분기된 것입니다.
+이 프로젝트에서는 복잡한 웹 서비스를 만들기 위해 필요한 Knex 쿼리 빌더의 고급 기능을 다룹니다.
+
+이 프로젝트는 [WPSN OAuth 프로젝트](https://github.com/wpsn/wpsn-oauth)에서 분기된 것입니다.
 
 ## SELECT
 
-Knex는 SELECT 구문을 크게 신경쓰지 않고도 편하게 사용할 수 있도록 만들어져 있습니다. 하지만 테이블에 컬럼이 많은 경우, 특정 작업에서 필요한 컬럼만을 선택적으로 불러오면 웹 페이지의 응답 속도를 빠르게 할 수 있습니다.
+Knex는 간단한 쿼리에 한해서는 SELECT 구문을 신경쓰지 않고도 편하게 사용할 수 있도록 만들어져 있습니다. 하지만 테이블에 컬럼이 많은 경우, 특정 작업에서 필요한 컬럼만을 선택적으로 불러오면 웹 페이지의 응답 속도를 빠르게 할 수 있습니다.
 
 ```js
 // 특정 사용자의 username와 avatar_url만 필요한 경우
@@ -61,7 +63,7 @@ knex('user')
 
 ```js
 > knex('user')
-  .select('user.id as user_id', 'article.id as article_id')
+  .select('user.id AS user_id', 'article.id AS article_id')
   .join('article', 'article.user_id', 'user.id')
   .first()
   .then(console.log)
@@ -72,18 +74,55 @@ knex('user')
 Knex의 `groupBy` 메소드로 `GROUP BY` 구문이 포함된 쿼리를 작성할 수 있습니다.
 
 ```js
-// 각 게시글에 달린 댓글의 갯수 세기
-> knex('article')
-  .join('comment', 'comment.article_id', 'article.id')
-  .groupBy('article_id')
+// comment 테이블을 이용해서 각 article_id 별로 댓글의 개수 구하기
+knex('comment')
   .select('article_id', knex.raw('count(*) as comment_count'))
-  .toString()
-'select `article_id`, count(*) as comment_count from `article` inner join `comment` on `comment`.`article_id` = `article`.`id` group by `article_id`'
+  .groupBy('article_id')
 ```
 
 ## 유연한 쿼리 빌더로서의 Knex
 
 Knex 쿼리 빌더를 사용하면 유연한 방식으로 쿼리를 쌓아나갈 수 있습니다. **유연성**은 순수 SQL 혹은 ORM 대신에 쿼리 빌더를 사용하는 가장 큰 이유입니다.
+
+### JOIN 서브쿼리 사용하기
+
+`join` 메소드의 첫 번째 인자로 테이블 이름이 아니라 쿼리 객체를 넘겨줄 수 있습니다. 이 기능을 이용해 `GROUP BY`의 결과로 만들어진 임시 테이블을 다른 테이블과 조인할 수 있습니다.
+
+```js
+// "게시물의 제목"과, "각 게시물에 달린 댓글의 개수"를 **하나의 테이블**에 출력하기
+
+// 위의 GROUP BY 예제에서 작성한 쿼리를 그대로 서브쿼리로 이용하되, 서브쿼리로 사용될 테이블의 이름을 `as` 메소드를 이용해 지정합니다.
+const subquery = knex('comment')
+  .select('article_id', knex.raw('count(*) as comment_count'))
+  .groupBy('article_id')
+  .as('comment_count_table')
+
+// 위에서 만든 임시 테이블을 article 테이블에 LEFT OUTER JOIN 합니다.
+// 임시 테이블에는 하나 이상의 댓글이 달린 article_id에 대한 기록만 있기 때문에,
+// 댓글이 하나도 없는 게시글에 대한 `comment_count_table.comment_count` 컬럼의 값은
+// 0이 아니라 NULL이 됩니다. (LEFT OUTER JOIN의 특성)
+// 따라서 NULL을 0으로 고쳐서 출력하기 위해 SELECT 시 COALESCE 함수를 사용합니다.
+knex('article')
+  .join('user', 'user.id', 'article.user_id')
+  .orderBy('article.id', 'desc')
+  .leftOuterJoin(subquery, 'comment_count_table.article_id', 'article.id')
+  .select('article.title', knex.raw('coalesce(comment_count_table.comment_count, 0) as comment_count'))
+```
+
+위의 Knex 쿼리에 `toString`을 호출해보면 아래와 같은 결과가 나옵니다.
+
+```sql
+select `article`.`title`, coalesce(comment_count_table.comment_count, 0) as comment_count
+from `article`
+inner join `user` on `user`.`id` = `article`.`user_id`
+left outer join (
+  select `article_id`, count(*) as comment_count
+  from `comment` group by `article_id`
+) as `comment_count_table` on `comment_count_table`.`article_id` = `article`.`id`
+order by `article`.`id` desc
+```
+
+이 밖에 여러 방식으로 서브쿼리를 사용할 수 있습니다. 자세한 사항은 공식 문서를 참고하세요.
 
 ### 느슨한 메소드 호출 순서
 
@@ -129,11 +168,14 @@ module.exports = {
       .orderBy('article.id', 'desc')
   },
   getArticlesWithCommentCount() {
+    const subquery = knex('comment')
+      .select('article_id', knex.raw('count(*) as comment_count'))
+      .groupBy('article_id')
+      .as('comment_count_table')
     // 미리 작성해 놓은 `getArticles` 활용하기
     return this.getArticles()
-      .select(knex.raw('COUNT(*) as comment_count'))
-      .join('comment', 'comment.article_id', 'article.id')
-      .groupBy('comment.article_id')
+      .leftOuterJoin(subquery, 'comment_count_table.article_id', 'article.id')
+      .select(knex.raw('coalesce(comment_count_table.comment_count, 0) as comment_count'))
   },
   // ...
 }
@@ -160,10 +202,11 @@ knex('user')
 ```js
 // query.js
 getArticlesWithCommentCount() {
+  const subquery = ...
   return this.getArticles()
-    .select(knex.raw('COUNT(*) as comment_count'))
-    .join('comment', 'comment.article_id', 'article.id')
-    .groupBy('comment.article_id')
+    .leftOuterJoin(subquery, 'comment_count_table.article_id', 'article.id')
+    // 쿼리의 실행에 꼭 필요한 컬럼만을 미리 지정해둔다.
+    .select(knex.raw('coalesce(comment_count_table.comment_count, 0) as comment_count'))
 }
 ```
 
